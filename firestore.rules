@@ -1,0 +1,79 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is signed in
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    // Helper to check if user is admin (by UID, admin email, or Firestore user role)
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.uid == "1j7sLsT9aERBoOocJQr49YpNcWE3" ||
+        ('email' in request.auth.token && request.auth.token.email in ["pediatrics@dnbpedia.in", "pediatrics@medforum.in"]) ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', '') == 'admin')
+      );
+    }
+
+    // Helper to check if user is gold or admin
+    function isGoldOrAdmin() {
+      return isAdmin() || (
+        isSignedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', '') in ['gold', 'admin']
+      );
+    }
+
+    // 1. QUESTIONS COLLECTION (Metadata for all new questions)
+    match /questions/{questionId} {
+      allow read: if true; 
+      allow write: if isAdmin(); 
+    }
+
+    // 2. STANDARD ANSWERS COLLECTION
+    match /answers_std/{answerId} {
+      allow read: if isSignedIn(); 
+      allow write: if isAdmin();
+    }
+
+    // 3. GOLD ANSWERS COLLECTION
+    match /answers_gold/{answerId} {
+      allow read: if isGoldOrAdmin();
+      allow write: if isAdmin();
+    }
+
+    // 4. USERS COLLECTION
+    match /users/{userId} {
+      allow read, write: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
+    }
+    // 5. SETTINGS COLLECTION
+    match /settings/{document} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    //6. EMAIL LOGS COLLECTION
+    match /emailLogs/{logId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+    //7. ADMIN LOGS COLLECTION
+    match /adminLogs/{logId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+    //8. SYSTEM CONFIG COLLECTION (Includes /systemConfig/emailSettings and subcollection /systemConfig/email/templates)
+    match /systemConfig/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    //9. MEMBERSHIP REQUESTS COLLECTION (UPI Payment Verification)
+    match /membership_requests/{requestId} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+  }
+}

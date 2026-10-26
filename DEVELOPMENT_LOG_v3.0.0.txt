@@ -1,0 +1,65 @@
+================================================================================
+                    PEDIATRICS PYQ ADMIN PORTAL - DEVELOPMENT LOG
+================================================================================
+VERSION: 3.0.0
+DATE: 2026-10-03
+WORKSPACE: d:\webprojects\exam-app-in-admin
+AUTHOR / PAIR: Antigravity Assistant & Engineering Team
+================================================================================
+
+1. VERSION UPGRADE
+--------------------------------------------------------------------------------
+- Upgraded package.json version string to 3.0.0.
+- Integrated version badges (v3.0.0) on the Login Screen and Admin Dashboard Top Header in src/App.jsx.
+
+2. SMTP & EMAIL SERVICE ENGINE (src/lib/emailService.js)
+--------------------------------------------------------------------------------
+- Firestore configuration storage under `/systemConfig/emailSettings`.
+- Support for direct SMTP settings (Host, Port, SSL/TLS, User, Password, From Name, From Email, Reply-To Email).
+- Support for free Google Apps Script / Webhook Relay bridge (useAppScriptBridge, appScriptUrl).
+- Master Email Notification Activation/Deactivation toggle (enabled: false by default).
+- Dispatch logger writing history to `/emailLogs`.
+
+3. EMAIL TEMPLATE MANAGEMENT SYSTEM
+--------------------------------------------------------------------------------
+- Default templates saved under `/emailTemplates`:
+  1) `gold_welcome`: Standard to GOLD status upgrade welcome.
+  2) `gold_reminder_3_7_days`: Expiry reminder sent when 3 to 7 days remain.
+  3) `gold_expired`: Notice sent when GOLD membership reaches expiration.
+- Dynamic tag interpolation engine with HTML sanitization (escapeHtml):
+  Supported tags: {{userName}}, {{userEmail}}, {{goldStartAt}}, {{expiryDate}}, {{daysRemaining}}, {{planMonths}}, {{appTitle}}, {{supportEmail}}.
+
+4. EMAIL & SMTP SETTINGS SCREEN (src/components/EmailSettingsScreen.jsx)
+--------------------------------------------------------------------------------
+- Integrated new "Email & SMTP" navigation tab into the Admin Dashboard toolbar.
+- Tab 1 (SMTP Config): Credentials form + Master Activation/Deactivation switch.
+- Tab 2 (Email Templates): Rich HTML/Text editor with interactive tag insertion pills and side-by-side Live Preview pane.
+- Tab 3 (Activity Logs): Firestore activity history table for email dispatches.
+- Interactive "Test SMTP Email" modal for target recipient verification.
+
+5. 3–7 DAY EXPIRATION REMINDER AUTO-SCANNER
+--------------------------------------------------------------------------------
+- Scanner Utility (src/utils/goldReminderScanner.js):
+  - Scans active GOLD users with 3–7 days remaining on subscription.
+  - Tracking flag `goldReminderSentForExpiryDate` prevents duplicate emails per cycle.
+- Interactive Scanner Modal (src/components/ReminderScannerModal.jsx):
+  - Batch "Dispatch All" and individual "Send Email" actions.
+  - Active/Deactivated safety checks before initiating sending.
+- Added "3–7d Reminders" toolbar button with live counter badge in src/App.jsx.
+
+6. SECURITY AUDIT & DEFENSIVE HARDENING
+--------------------------------------------------------------------------------
+- Hardened firestore.rules:
+  Restricted `/systemConfig/{document}`, `/emailTemplates/{templateId}`, and `/emailLogs/{logId}` strictly to `isAdmin()`.
+- XSS Prevention:
+  Added `escapeHtml()` sanitization to `renderTemplate()` to escape dynamic string variables before HTML injection.
+- Graceful Error Fallbacks:
+  Handled Firestore permission errors silently in fetch functions, falling back to default settings without uncaught console errors.
+
+================================================================================
+VERIFICATION SUMMARY
+================================================================================
+- Build Command: `npm run build`
+- Build Status: PASSED (0 errors)
+- Production Asset Chunks Generated Successfully.
+================================================================================

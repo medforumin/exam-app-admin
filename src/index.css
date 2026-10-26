@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Optional: Add a base font or global resets here */
+body {
+  background-color: #f3f4f6; /* Gray-100 to match app theme */
+}

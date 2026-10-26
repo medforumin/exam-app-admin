@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "dnbpediain"
+  },
+  "targets": {
+    "dnbpediain": {
+      "hosting": {
+        "dnbpedia-admin": [
+          "dnbpedia-admin"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
